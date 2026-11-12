@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/backupmodal.tsx","./src/components/navbar.tsx","./src/components/troubleshootcard.tsx","./src/components/troubleshootdetailmodal.tsx","./src/components/troubleshootformmodal.tsx","./src/services/db.ts","./src/types/index.ts","./src/utils/image.ts"],"version":"5.6.3"}
