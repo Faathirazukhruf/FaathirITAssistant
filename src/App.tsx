@@ -1,11 +1,55 @@
-import React, { useState, useRef } from 'react';
-import { Camera, Sparkles, Upload, RotateCcw, ExternalLink, ArrowRight, ShieldCheck } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Camera, Sparkles, Upload, RotateCcw, ArrowRight, Download, CheckCircle2 } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  // Tangkap event sebelum install PWA
+  useEffect(() => {
+    // Cek apakah sudah berjalan di mode standalone (PWA terinstall)
+    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone) {
+      setIsInstalled(true);
+    }
+
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('appinstalled', () => {
+      setIsInstalled(true);
+      setIsInstallable(false);
+      setDeferredPrompt(null);
+    });
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+    };
+  }, []);
+
+  // Handler klik tombol Install
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) {
+      alert('Untuk menginstall di HP:\nBuka menu titik tiga (⋮) di pojok kanan atas Chrome, lalu pilih "Install aplikasi" atau "Tambahkan ke Layar Utama".');
+      return;
+    }
+
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setIsInstallable(false);
+    }
+    setDeferredPrompt(null);
+  };
 
   // Tangani foto dari kamera / galeri
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,7 +78,7 @@ export const App: React.FC = () => {
         });
         return;
       } catch (err: any) {
-        if (err.name === 'AbortError') return; // User cancel
+        if (err.name === 'AbortError') return;
       }
     }
 
@@ -43,7 +87,6 @@ export const App: React.FC = () => {
       window.location.href =
         'intent://#Intent;package=com.google.ar.lens;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;end';
 
-      // Fallback jika Google Lens app belum terpasang
       setTimeout(() => {
         window.open('https://lens.google.com/', '_blank');
       }, 1500);
@@ -62,7 +105,7 @@ export const App: React.FC = () => {
     <div className="min-h-screen bg-[#070b14] text-slate-100 flex flex-col justify-between p-4 sm:p-6 max-w-md mx-auto select-none">
       
       {/* 1. Header Minimalis */}
-      <header className="flex items-center justify-between pt-2 pb-4">
+      <header className="flex items-center justify-between pt-2 pb-3">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-black text-slate-950 text-lg shadow-lg shadow-emerald-500/20">
             F
@@ -77,9 +120,28 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-          <ShieldCheck className="w-3 h-3" /> PWA Ready
-        </span>
+        {/* Tombol Install PWA atau Badge Status */}
+        {isInstallable ? (
+          <button
+            onClick={handleInstallApp}
+            className="flex items-center gap-1.5 text-[11px] font-bold text-slate-950 px-3 py-1.5 rounded-full bg-emerald-400 hover:bg-emerald-300 shadow-md shadow-emerald-500/20 active:scale-95 transition"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Install App</span>
+          </button>
+        ) : isInstalled ? (
+          <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+            <CheckCircle2 className="w-3 h-3" /> Terpasang
+          </span>
+        ) : (
+          <button
+            onClick={handleInstallApp}
+            className="flex items-center gap-1 text-[10px] font-medium text-slate-400 hover:text-emerald-400 px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 transition"
+          >
+            <Download className="w-3 h-3" />
+            <span>Install</span>
+          </button>
+        )}
       </header>
 
       {/* 2. Area Utama: Viewfinder / Frame Foto */}
@@ -161,7 +223,7 @@ export const App: React.FC = () => {
       </main>
 
       {/* 3. Bottom Action Bar: Tombol ANALISIS SOLUSI */}
-      <footer className="pt-4 pb-2 space-y-3">
+      <footer className="pt-3 pb-2 space-y-2.5">
         {/* Tombol Utama */}
         <button
           onClick={handleAnalisisSolusi}
@@ -174,7 +236,7 @@ export const App: React.FC = () => {
         {/* Shortcut Buka Langsung Google Lens Tanpa Foto */}
         <button
           onClick={() => handleAnalisisSolusi()}
-          className="w-full py-2.5 text-center text-xs text-slate-400 hover:text-slate-200 font-semibold flex items-center justify-center gap-1 transition"
+          className="w-full py-2 text-center text-xs text-slate-400 hover:text-slate-200 font-semibold flex items-center justify-center gap-1 transition"
         >
           <span>Langsung buka kamera Google Lens</span>
           <ArrowRight className="w-3.5 h-3.5 text-emerald-400" />
