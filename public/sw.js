@@ -1,10 +1,12 @@
-const CACHE_NAME = 'faathir-it-v1';
+const CACHE_NAME = 'faathir-it-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
+  '/favicon.png',
+  '/avatar.jpg',
 ];
 
 self.addEventListener('install', (event) => {
@@ -38,7 +40,6 @@ self.addEventListener('fetch', (event) => {
         return cachedResponse;
       }
       return fetch(event.request).catch(() => {
-        // Fallback to cache root if offline
         return caches.match('/');
       });
     })

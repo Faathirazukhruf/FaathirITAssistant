@@ -104,14 +104,19 @@ export const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#070b14] text-slate-100 flex flex-col justify-between p-4 sm:p-6 max-w-md mx-auto select-none">
       
-      {/* 1. Header Minimalis */}
+      {/* 1. Header dengan Avatar Karakter Keren */}
       <header className="flex items-center justify-between pt-2 pb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-black text-slate-950 text-lg shadow-lg shadow-emerald-500/20">
-            F
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <img
+              src="/avatar.jpg"
+              alt="Faathir IT Avatar"
+              className="w-10 h-10 rounded-xl object-cover object-top border-2 border-emerald-500/60 shadow-lg shadow-emerald-500/25"
+            />
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-[#070b14] rounded-full animate-pulse"></span>
           </div>
           <div>
-            <h1 className="text-sm font-bold text-white tracking-tight leading-none">
+            <h1 className="text-sm font-extrabold text-white tracking-tight leading-none">
               Faathir <span className="text-emerald-400">IT</span> Assistant
             </h1>
             <p className="text-[10px] text-slate-400 leading-tight mt-0.5">
@@ -127,7 +132,7 @@ export const App: React.FC = () => {
             className="flex items-center gap-1.5 text-[11px] font-bold text-slate-950 px-3 py-1.5 rounded-full bg-emerald-400 hover:bg-emerald-300 shadow-md shadow-emerald-500/20 active:scale-95 transition"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Install App</span>
+            <span>Install</span>
           </button>
         ) : isInstalled ? (
           <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
