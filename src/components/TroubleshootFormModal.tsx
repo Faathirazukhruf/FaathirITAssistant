@@ -201,6 +201,10 @@ export const TroubleshootFormModal: React.FC<TroubleshootFormModalProps> = ({
                     {lensNotice}
                   </div>
                 )}
+
+                <p className="text-[11px] text-slate-400 text-center">
+                  💡 Di Chrome HP: Bisa juga <strong>tekan & tahan foto</strong> di atas lalu pilih <em>"Telusuri gambar dengan Google Lens"</em>.
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3">

@@ -22,6 +22,7 @@ export const TroubleshootDetailModal: React.FC<TroubleshootDetailModalProps> = (
   onDelete,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [lensNotice, setLensNotice] = useState<string | null>(null);
 
   if (!isOpen || !item) return null;
 
@@ -34,8 +35,10 @@ export const TroubleshootDetailModal: React.FC<TroubleshootDetailModalProps> = (
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleLaunchLens = () => {
-    openWithGoogleLens(item.photoProblem);
+  const handleLaunchLens = async () => {
+    const res = await openWithGoogleLens(item.photoProblem);
+    setLensNotice(res.message);
+    setTimeout(() => setLensNotice(null), 5000);
   };
 
   const handleDelete = () => {
@@ -115,6 +118,15 @@ export const TroubleshootDetailModal: React.FC<TroubleshootDetailModalProps> = (
                 <Sparkles className="w-4 h-4 text-yellow-300" />
                 <span>Cari / Analisis Ulang di Google Lens 🔍</span>
               </button>
+
+              {lensNotice && (
+                <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/30 text-xs text-blue-300 text-center animate-fadeIn">
+                  {lensNotice}
+                </div>
+              )}
+              <p className="text-[11px] text-slate-400 text-center">
+                💡 Di Chrome HP: Bisa juga <strong>tekan & tahan foto</strong> di atas lalu pilih <em>"Telusuri gambar dengan Google Lens"</em>.
+              </p>
             </div>
           )}
 

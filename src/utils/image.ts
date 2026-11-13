@@ -56,38 +56,66 @@ export function dataUrlToFile(dataUrl: string, filename = 'lens-search.jpg'): Fi
 
 /**
  * Buka foto ke Google Lens:
- * 1. Jika di Android HP dan Web Share API mendukung File: buka share sheet (user pilih Google Lens)
- * 2. Fallback: Buka Google Lens Web di tab baru
+ * 1. Jika di Android HP & didukung Web Share API dengan File (wajib HTTPS): buka native share sheet
+ * 2. Jika di Android HP tapi Web Share gagal / tanpa HTTPS: langsung luncurkan aplikasi Google Lens via Android Intent
+ *    (menghindari redirect web lens.google.com ke Play Store)
+ * 3. Fallback Desktop: buka Google Lens Web di tab baru
  */
 export async function openWithGoogleLens(photoBase64?: string): Promise<{ success: boolean; message: string }> {
-  if (!photoBase64) {
-    window.open('https://lens.google.com/', '_blank');
-    return { success: true, message: 'Membuka Google Lens Web' };
+  const isAndroid = typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent);
+  const isSecure = typeof window !== 'undefined' && window.isSecureContext;
+
+  // 1. Jika ada foto dan browser mendukung Web Share API dengan File
+  if (photoBase64) {
+    try {
+      const file = dataUrlToFile(photoBase64, 'troubleshoot-lens.jpg');
+
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: 'Cari Solusi via Google Lens',
+          text: 'Pilih aplikasi Google Lens untuk menganalisis komponen atau teks error ini.',
+          files: [file],
+        });
+        return { 
+          success: true, 
+          message: 'Pilih "Google Lens" pada menu berbagi yang muncul di HP!' 
+        };
+      }
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        return { success: true, message: 'Dibatalkan oleh pengguna.' };
+      }
+      console.warn('Web Share API tidak dapat membagikan file:', err);
+    }
   }
 
-  try {
-    const file = dataUrlToFile(photoBase64, 'troubleshoot-lens.jpg');
+  // 2. Jika di HP Android: Jangan lempar ke https://lens.google.com/ karena Google akan me-redirect ke Play Store.
+  // Luncurkan langsung aplikasi Google Lens di HP melalui Android Intent URI.
+  if (isAndroid) {
+    try {
+      // Intent untuk membuka aplikasi Google Lens terpasang di HP Android
+      const androidIntentUrl =
+        'intent://#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.google.ar.lens;S.browser_fallback_url=https%3A%2F%2Flens.google%2F;end;';
+      
+      window.location.href = androidIntentUrl;
 
-    // Cek apakah browser mendukung Web Share API dengan File (umum di Chrome Android)
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({
-        title: 'Cari Solusi via Google Lens',
-        text: 'Pilih aplikasi Google Lens untuk mendeteksi komponen atau teks error ini.',
-        files: [file],
-      });
-      return { success: true, message: 'Berhasil membuka Google Lens di HP!' };
+      return {
+        success: true,
+        message: photoBase64
+          ? 'Membuka aplikasi Google Lens. (Tips: Di Chrome HP, bisa juga tekan & tahan foto lalu pilih "Telusuri dengan Google Lens")'
+          : 'Membuka aplikasi Google Lens langsung di HP...'
+      };
+    } catch (err) {
+      console.warn('Gagal meluncurkan intent Android Lens:', err);
     }
-  } catch (err: any) {
-    if (err.name === 'AbortError') {
-      return { success: true, message: 'Dibatalkan oleh pengguna.' };
-    }
-    console.warn('Web Share API tidak dapat membagikan file langsung:', err);
   }
 
-  // Fallback ke tab Google Lens Web
+  // 3. Fallback untuk Desktop / PC atau browser non-Android
   window.open('https://lens.google.com/', '_blank');
   return { 
     success: true, 
-    message: 'Membuka Google Lens Web. Anda juga dapat drag/upload foto ke halaman tersebut.' 
+    message: isSecure 
+      ? 'Membuka Google Lens Web. Anda dapat upload atau drag foto ke halaman tersebut.' 
+      : 'Membuka Google Lens. (Catatan: Untuk fitur kirim foto otomatis di HP, pastikan web diakses lewat HTTPS seperti Vercel).'
   };
 }
